@@ -1,0 +1,16 @@
+{
+    "name": "ticketingWeb App",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+	"watch": "node node_modules/nodemon/bin/nodemon.js ./index.js",
+	"start" : "node ./index.js"
+    },
+    "author": "Keryan HOUSSIN",
+    "license": "ISC",
+    "description": "Projet Efrits de ticketing",
+    "dependencies": {
+	"nodemon": "^3.1.3",
+	"ws": "^8.17.0"
+    }
+}

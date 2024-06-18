@@ -1,0 +1,89 @@
+//LoginMenu.js
+import React, { useState } from 'react';
+import { Box, TextField, Button} from '@mui/material';
+import './LoginMenu.css';
+
+function LoginMenu() {
+    const [username, setUsername] = useState('');
+    const [colorUsername, setColorUsername] = useState('')
+    const [errorMsgUsername, setErrorMsgUsername] = useState('');
+    const [errorValueUsername, setErrorValueUsername] = useState(false);
+    const [password, setPassword] = useState('');
+    const [errorMsgPassword, setErrorMsgPassword] = useState('');
+    const [colorPassword, setColorPassword] = useState('blue')
+    const [errorValue, setErrorValue] = useState(false);
+
+    const handleUsernameChange = (event) => {
+	setUsername(event.target.value);
+	if (username.length < 3 || username.length > 20)
+	{
+	    setColorUsername('error');
+	    setErrorMsgUsername('Doit être compris entre 3 et 20 caractères !');
+	    setErrorValueUsername(true);
+	}
+	else
+	{
+	    setColorUsername('success');
+	    setErrorMsgUsername('');
+	    setErrorValueUsername(false);
+	}
+    };
+
+    const handlePasswordChange = (event) => {
+	setPassword(event.target.value);
+    };
+
+    const handleSubmit = (event) => {
+	event.preventDefault();
+	setPassword('');
+	setUsername('');
+	// Logique de connexion à ajouter ici
+	console.log('Username:', username);
+	console.log('Password:', password);
+    };
+
+    return (
+	<div className="login-container">
+	    <form onSubmit={handleSubmit} className="login-form">
+		<h2>Connexion</h2>
+		<div className="form-group">
+		    <TextField
+			error={errorValue}
+			id={errorValue ? "outlined-error-helper-text" : "username"}
+			helperText={errorMsgUsername}
+			color={colorUsername}
+			autoComplete="username"
+			label="Nom d'utilisateur"
+			type="text"
+			value={username}
+			onInput={handleUsernameChange}
+			placeholder="Enter your username"
+			required
+		    />
+		</div>
+		<div className="form-group">
+		    <TextField
+			autoComplete="current-password"
+			label="Mot de passe"
+			type="password"
+			id="outlined-error-helper-text"
+			helperText="Mot de passe incorrect !"
+			value={password}
+			onInput={handlePasswordChange}
+			minLength="8"
+			maxLength="40"
+			placeholder="Enter your password"
+			required
+		    />
+		</div>
+		<Button
+		    variant="contained"
+		    type="submit"
+		>Se connecter</Button>
+	    </form>
+	    <p>Pas de compte ? S'inscrire</p>
+	</div>
+    );
+}
+
+export default LoginMenu;

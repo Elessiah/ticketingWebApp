@@ -1,0 +1,13 @@
+{
+    "name": "ticketingWeb App",
+    "version": "1.0.0",
+    "description": "Efrits web project of ticketing",
+    "main": "index.js",
+    "scripts": {},
+    "repository": {},
+    "keywords": [],
+    "author": "Keryan HOUSSIN",
+    "license": "ISC",
+    "bugs": {},
+    "homepage": ""
+}

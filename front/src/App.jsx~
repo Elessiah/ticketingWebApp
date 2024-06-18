@@ -1,0 +1,16 @@
+// src/App.jsx
+import React, { useState } from 'react';
+import './App.css';
+import LoginMenu from "./LoginMenu"
+
+function App() {
+    return (
+	<>
+	    <div>
+		<LoginMenu/>
+	    </div>
+	</>
+    )
+}
+
+export default App
