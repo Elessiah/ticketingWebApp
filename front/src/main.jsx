@@ -8,3 +8,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <App />
   </React.StrictMode>,
 )
+
+ReactDOM.createRoot(document.getElementById('dashboard-root')).render(
+  <React.StrictMode>
+    <Dashboard />
+  </React.StrictMode>,
+)
+

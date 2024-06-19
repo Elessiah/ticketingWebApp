@@ -1,0 +1,16 @@
+class WS {
+    constructor({protocol = 'ws:', host = 'localhost', port = '8080'}) {
+	this.protocol = protocol;
+	this.host = host;
+	this.port = port;
+	this.createWS();
+    }
+
+    createWS() {
+	this.socket = new WebSocket(`${this.protocol}//${this.host}:${this.port}`);
+	this.isOpen = false;
+	this.isClose = false;
+
+	this.onOpen = this.onOpen.bind(this);
+	this.onClose = this.onClose.bind(this);
+	this.onError = this.onError.bind(this);,

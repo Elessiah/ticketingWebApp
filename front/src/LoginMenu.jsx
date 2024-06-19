@@ -1,9 +1,11 @@
 //LoginMenu.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button} from '@mui/material';
 import './LoginMenu.css';
+import WS from './WS';
+import CryptoJS from 'crypto-js';
 
-function LoginMenu() {
+function LoginMenu({ webSocket, setToken}) {
     const [username, setUsername] = useState('');
     const [colorUsername, setColorUsername] = useState('')
     const [errorMsgUsername, setErrorMsgUsername] = useState('');
@@ -13,7 +15,14 @@ function LoginMenu() {
     const [colorPassword, setColorPassword] = useState('')
     const [errorValuePassword, setErrorValuePassword] = useState(false);
     const [isLogIn, setIsLogIn] = useState(true);
+    const [connected, setConnected] = useState(false);
 
+    useEffect(() => {
+	webSocket.onData = onData;
+	webSocket.onConnected = () => setConnected(true);
+	webSocket.onDisconnected = () => setConnected(false);
+    });
+    
     const handleUsernameChange = (event) => {
 	setUsername(event.target.value);
 	if (!isLogIn && (username.length < 3 || username.length > 20))
@@ -46,10 +55,35 @@ function LoginMenu() {
 	}
     };
 
+    function onData(data) {
+	if (data === -1)
+	{
+	    setErrorValueUsername(true);
+	    setErrorMsgUsername('Wrong username or password');
+	    setErrorValuePassword(true);
+	    setErrorMsgPassword('Wrong username or password');
+	}
+	else
+	    setToken(data);
+    }
+
     const handleSubmit = (event) => {
+/*	if (!connected)
+	{
+	    setErrorValueUsername(true);
+	    setErrorMsgUsername('Network Issue, please try again later !');
+	    setErrorValuePassword(true);
+	    setErrorMsgPassword('Network Issue, please try again later !');
+	    return;
+	} */
+	if (errorValueUsername || errorValuePassword)
+	    return;
 	event.preventDefault();
-	setPassword('');
-	setUsername('');
+
+	const tokenTry = CryptoJS.SHA512(username + password).toString();
+	//webSocket.send(tokenTry);
+	setToken(tokenTry);
+		    
 	// Logique de connexion à ajouter ici
 	console.log('Username:', username);
 	console.log('Password:', password);
@@ -92,7 +126,7 @@ function LoginMenu() {
 		<Button
 		    variant="contained"
 		    type="submit"
-		>Se connecter</Button>
+		>{isLogIn ? ( <>Se connecter</> ) : (<>S'inscrire</>)}</Button>
 		<p>
 		    {isLogIn ? (
 			<>
