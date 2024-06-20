@@ -1,6 +1,7 @@
 {
     "name": "ticketingWeb App",
     "version": "1.0.0",
+    "proxy": "http://localhost:8000",
     "description": "Efrits web project of ticketing",
     "main": "index.js",
     "scripts": {},

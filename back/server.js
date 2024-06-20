@@ -1,12 +1,12 @@
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 5173;
+const expressManagement = require('./expressManagement');
 
-app.get('/api/login', (req, res) => {
-    res.send({ express: 'Hello From Express' });
-});
+class Server {
+    constructor(port) {
+	this.port = port;
+	this.users = new Map();
+	this.express = new expressManagement(port, this.users);
+    }
 
-app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-});
+}
 
+module.exports = Server;

@@ -2,96 +2,86 @@
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button} from '@mui/material';
 import './LoginMenu.css';
-import WS from './WS';
 import CryptoJS from 'crypto-js';
 
-function LoginMenu({ webSocket, setToken}) {
+function LoginMenu({ setToken }) {
     const [username, setUsername] = useState('');
-    const [colorUsername, setColorUsername] = useState('')
-    const [errorMsgUsername, setErrorMsgUsername] = useState('');
-    const [errorValueUsername, setErrorValueUsername] = useState(false);
     const [password, setPassword] = useState('');
-    const [errorMsgPassword, setErrorMsgPassword] = useState('');
-    const [colorPassword, setColorPassword] = useState('')
-    const [errorValuePassword, setErrorValuePassword] = useState(false);
     const [isLogIn, setIsLogIn] = useState(true);
-    const [connected, setConnected] = useState(false);
+    let colorPassword = null ;
+    let errorMsgPassword = '';
+    let errorValuePassword = false;
+    let colorUsername = null;
+    let errorMsgUsername = '';
+    let errorValueUsername = false;
 
-    useEffect(() => {
-	webSocket.onData = onData;
-	webSocket.onConnected = () => setConnected(true);
-	webSocket.onDisconnected = () => setConnected(false);
-    });
-    
-    const handleUsernameChange = (event) => {
-	setUsername(event.target.value);
-	if (!isLogIn && (username.length < 3 || username.length > 20))
-	{
-	    setColorUsername('error');
-	    setErrorMsgUsername('Doit être compris entre 3 et 20 caractères !');
-	    setErrorValueUsername(true);
-	}
-	else
-	{
-	    setColorUsername('success');
-	    setErrorMsgUsername('');
-	    setErrorValueUsername(false);
-	}
-    };
-
-    const handlePasswordChange = (event) => {
-	setPassword(event.target.value);
-	if (!isLogIn && (password.length < 8 || username.length > 40))
-	{
-	    setColorPassword('error');
-	    setErrorMsgPassword('Doit être compris entre 3 et 20 caractères !');
-	    setErrorValuePassword(true);
-	}
-	else
-	{
-	    setColorPassword('success');
-	    setErrorMsgPassword('');
-	    setErrorValuePassword(false);
-	}
-    };
-
-    function onData(data) {
-	if (data === -1)
-	{
-	    setErrorValueUsername(true);
-	    setErrorMsgUsername('Wrong username or password');
-	    setErrorValuePassword(true);
-	    setErrorMsgPassword('Wrong username or password');
-	}
-	else
-	    setToken(data);
+    if (!isLogIn && (password.length < 8 || password.length > 40))
+    {
+	errorValuePassword = true;
+	colorPassword = 'error';
+	errorMsgPassword = 'Doit être compris entre 8 et 40 caractères';
+    }
+    else if (!isLogIn)
+    {
+	errorValuePassword = false;
+	colorPassword = 'success';
+	errorMsgPassword = 'Super mot de passe';
     }
 
-    const handleSubmit = (event) => {
-/*	if (!connected)
-	{
-	    setErrorValueUsername(true);
-	    setErrorMsgUsername('Network Issue, please try again later !');
-	    setErrorValuePassword(true);
-	    setErrorMsgPassword('Network Issue, please try again later !');
-	    return;
-	} */
+    if (!isLogIn && (username.length < 3 || username.length > 20))
+    {
+	errorValueUsername = true;
+	colorUsername = 'error';
+	errorMsgUsername = 'Doit être compris entre 3 et 20';
+    }
+    else if (!isLogIn)
+    {
+	errorValueUsername = false;
+	colorUsername = 'success';
+	errorMsgUsername = 'Super nom !';
+    }
+
+    function switchLoginMod(newLoginValue)
+    {
+	setUsername('');
+	setPassword('');
+	if (isLogIn)
+	    setIsLogIn(false);
+	else
+	    setIsLogIn(true);
+    }
+
+    const handleSubmit = async (event) => {
 	if (errorValueUsername || errorValuePassword)
 	    return;
-	event.preventDefault();
-
-	const tokenTry = CryptoJS.SHA512(username + password).toString();
-	//webSocket.send(tokenTry);
-	setToken(tokenTry);
-		    
-	// Logique de connexion à ajouter ici
-	console.log('Username:', username);
-	console.log('Password:', password);
+	console.log(username, password)
+	if (isLogIn)
+	{
+	    const res = await fetch('http://localhost:8000/api/login/?login=' + username + '&password=' + password);
+	    if (res.ok)
+	    {
+		const data = await res.json();
+		setToken(data.hash);
+	    }
+	    else if (res.status == 409)
+	    {
+		errorValuePassword = true;
+		colorPassword = 'error';
+		errorMsgPassword = 'Mauvais mot de passe ou nom d\'utilisateur';
+		errorValueUsername = true;
+		colorUsername = 'error';
+		errorMsgUsername = 'Mauvais mot de passe ou nom d\'utilisateur';
+	    }
+	}
+	else
+	{
+	    await fetch('http://localhost:8000/api/signUp/?login=' + username + '&password=' + password);
+	}
     };
 
     return (
 	<div className="login-container">
-	    <form onSubmit={handleSubmit} className="login-form">
+	    <div className="login-form">
 		<h2>{isLogIn ? (<>Connexion</>) : (<>Inscription</>)}</h2>
 		<div className="form-group">
 		    <TextField
@@ -103,7 +93,7 @@ function LoginMenu({ webSocket, setToken}) {
 			label="Nom d'utilisateur"
 			type="text"
 			value={username}
-			onInput={handleUsernameChange}
+			onChange={evt => setUsername(evt.target.value)}
 			placeholder="Enter your username"
 			required
 		    />
@@ -116,29 +106,30 @@ function LoginMenu({ webSocket, setToken}) {
 			color={colorPassword}
 			autoComplete={isLogIn ? "current-password" : "new-password"}
 			label="Mot de passe"
-			type="password"
+		type="password"
 			value={password}
-			onInput={handlePasswordChange}
+			onChange={evt => setPassword(evt.target.value)}
 			placeholder="Enter your password"
 			required
 		    />
 		</div>
 		<Button
+		    onClick={handleSubmit}
 		    variant="contained"
 		    type="submit"
 		>{isLogIn ? ( <>Se connecter</> ) : (<>S'inscrire</>)}</Button>
 		<p>
 		    {isLogIn ? (
 			<>
-			    Pas de compte ? <a style={{ cursor: 'pointer' }} onClick={() => setIsLogIn(false)}>S'inscrire</a>
+			    Pas de compte ? <a style={{ cursor: 'pointer' }} onClick={() => switchLoginMod()}>S'inscrire</a>
 			</>
 		    ) : (
 			<>
-			    Déjà inscrit ? <a style={{ cursor: 'pointer' }}  onClick={() => setIsLogIn(true)}>Se connecter</a>
+			    Déjà inscrit ? <a style={{ cursor: 'pointer' }}  onClick={() => switchLoginMod()}>Se connecter</a>
 			</>
 		    )}
 		</p>
-	    </form>
+	    </div>
 	</div>
     );
 }

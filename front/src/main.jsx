@@ -9,9 +9,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 )
 
-ReactDOM.createRoot(document.getElementById('dashboard-root')).render(
-  <React.StrictMode>
-    <Dashboard />
-  </React.StrictMode>,
-)
-
