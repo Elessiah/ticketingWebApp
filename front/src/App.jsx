@@ -1,16 +1,24 @@
 // src/App.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './App.css';
-import LoginMenu from "./LoginMenu"
+import LoginMenu from "./LoginMenu";
 
 function App() {
-    const [token, setToken] = useState('');
+    const [isConnected, setIsConnected] = useState(false);
+    const navigate = useNavigate();
 
-    return (
-	<>
-	    {token === '' ? (<> <LoginMenu setToken={setToken} /> </>) : ( <>ça fonctionne ! {token} </> )}
-	</>
-    )
+    useEffect(() => {
+	if (isConnected) {
+	    navigate('/dashboard');
+	}
+    }, [isConnected, navigate]);
+    
+
+    if (!isConnected)
+	return (<> <LoginMenu setIsConnected={setIsConnected} /> </>);
+    else
+	return (<><h1>Erreur 404, page introuvable</h1></>);
 }
 
 export default App

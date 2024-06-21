@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button} from '@mui/material';
 import './LoginMenu.css';
-import CryptoJS from 'crypto-js';
+import Cookies from 'js-cookie';
 
-function LoginMenu({ setToken }) {
+function LoginMenu({ setIsConnected }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [isLogIn, setIsLogIn] = useState(true);
@@ -61,7 +61,9 @@ function LoginMenu({ setToken }) {
 	    if (res.ok)
 	    {
 		const data = await res.json();
-		setToken(data.hash);
+		Cookies.set('token', data.hash, {secure: true, sameSite: 'none'});
+		Cookies.set('username', username, {secure: true, sameSite: 'none'});
+		setIsConnected(true);
 	    }
 	    else if (res.status == 409)
 	    {
@@ -75,7 +77,36 @@ function LoginMenu({ setToken }) {
 	}
 	else
 	{
-	    await fetch('http://localhost:8000/api/signUp/?login=' + username + '&password=' + password);
+	    const res = await fetch('http://localhost:8000/api/signUp/?login=' + username + '&password=' + password);
+	    if (res.ok)
+	    {
+		setIsLogIn(true);
+/*		colorPassword = 'success';
+		errorMsgPassword = 'Inscrit avec succès !';
+		colorUsername = 'success';
+		errorMsgUsername = 'Inscrit avec succès !';
+		*/
+		setUsername('');
+		setPassword('');
+	    }
+	    else if (res.status == 1)
+	    {
+		colorUsername = 'error';
+		errorValueUsername = true;
+		errorMsgUsername = 'Mauvais format';
+	    }
+	    else if (res.status == 2)
+	    {
+		colorPassword = 'error';
+		errorValuePassword = true;
+		errorMsgPassword = 'Mauvais format';
+	    }
+	    else if (res.status == 3)
+	    {
+		colorUsername = 'error';
+		errorValueUsername = true;
+		errorMsgUsername = 'Nom déjà utilisé !';
+	    }
 	}
     };
 

@@ -29,6 +29,11 @@ class expressManagement {
 		    await this.manageSignUp(req, res);
 		    return;
 		}
+		else if (req.path === '/api/verify/')
+		{
+		    await this.manageVerify(req, res);
+		    return;
+		}
 		await res.status(404).send('<h1>Sorry, we cannot find that !</h1>');
 	    }
 	    catch (e)
@@ -41,14 +46,18 @@ class expressManagement {
 
     async manageSignUp(req, res)
     {
+	if (lodash.isNil(req.query.login) || lodash.isNil(req.query.password))
+	    return await res.status(401).send('Missing one or more argument');
 	if (req.query.login.length < 3 || req.query.login.length > 20)
-	    return await res.status(401).send('Wrong format of login');
+	    return await res.status(1).send('Wrong format of login');
 	if (req.query.password.length < 8 || req.query.password.length > 40)
-	    return await res.status(401).send('Wrong format of login');
+	    return await res.status(2).send('Wrong format of password');
 	if (this.users.has(req.query.login))
-	    return await res.status(401).send('This username is already used !');
+	    return await res.status(3).send('This username is already used !');
 	const hash = await argon2.hash(req.query.login + 'efrits' + req.query.password);
  	await this.users.set(req.query.login, new User(req.query.login, hash));
+	await res.json( { hash } );
+	return;
     }
 
     async manageLogin(req, res)
@@ -64,6 +73,21 @@ class expressManagement {
 	}
 	else
 	    await res.status(409).send('Wrong username or password !');
+    }
+
+    async manageVerify(req, res)
+    {
+	if (lodash.isNil(req.query.token) || lodash.isNil(req.query.username))
+	    return await res.status(401).send('Missing one or more argument');
+	if (!this.users.has(req.query.username))
+	    return await res.status(406).send('Wrong username !');
+	if (req.query.token === this.users.get(req.query.username).hash)
+	{
+	    const hash = req.query.token;
+	    await res.json({ hash });
+	    return;
+	}
+	return await res.status(406).send('Wrong token');
     }
 }
 
