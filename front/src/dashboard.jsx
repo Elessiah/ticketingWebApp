@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './dashboard.css';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
+import { Box, TextField, Button } from '@mui/material';
 
 function Dashboard() {
     const token = Cookies.get('token');
@@ -14,8 +15,8 @@ function Dashboard() {
 	const res = await fetch('http://localhost:8000/api/verify/?username=' + username + '&token=' + token);
 	if (!res.ok) {
 	    console.log('retour to home');
-	    Cookies.remove('token');
-	    Cookies.remove('username');
+	    await Cookies.remove('token');
+	    await Cookies.remove('username');
 	    await navigate('/404');
 	}
     }
@@ -23,7 +24,21 @@ function Dashboard() {
     authentificationVerif();
 
     console.log('Your token is : ', token);
-    return(<> Welcome to The DashBoard ! {token} </>)
+    return(<>
+	       <div className='top-line-dashboard'>
+		   <TextField
+		       label='Search ticket'
+		       type='text'
+		       onChange={evt => searchTicket(evt.target.value) }
+		   />
+	       </div>
+	       <div>
+		   <Box
+		       height={200}
+		       width={200}
+		   >
+		   </Box>
+	       </div></>)
 }
 
 export default Dashboard

@@ -81,9 +81,11 @@ class expressManagement {
 	    return await res.status(401).send('Missing one or more argument');
 	if (!this.users.has(req.query.username))
 	    return await res.status(406).send('Wrong username !');
+	console.log('input token :', req.query.token);
+	console.log('server token :', this.users.get(req.query.username).hash);
 	if (req.query.token === this.users.get(req.query.username).hash)
 	{
-	    const hash = req.query.token;
+	    const hash = this.users.get(req.query.username).hash;
 	    await res.json({ hash });
 	    return;
 	}
