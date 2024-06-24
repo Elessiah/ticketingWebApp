@@ -5,46 +5,35 @@ import './LoginMenu.css';
 import Cookies from 'js-cookie';
 
 function LoginMenu({ setIsConnected }) {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    
+    const [username, setUsername] = useState({ value : '', color : null, errorMsg : '', errorValue : false });
+    const [password, setPassword] = useState({ value : '', color : null, errorMsg : '', errorValue : false });
     const [isLogIn, setIsLogIn] = useState(true);
-    let colorPassword = null ;
-    let errorMsgPassword = '';
-    let errorValuePassword = false;
-    let colorUsername = null;
-    let errorMsgUsername = '';
-    let errorValueUsername = false;
 
-    if (!isLogIn && (password.length < 8 || password.length > 40))
+    function passwordInputEdit(newPassword)
     {
-	errorValuePassword = true;
-	colorPassword = 'error';
-	errorMsgPassword = 'Doit être compris entre 8 et 40 caractères';
-    }
-    else if (!isLogIn)
-    {
-	errorValuePassword = false;
-	colorPassword = 'success';
-	errorMsgPassword = 'Super mot de passe';
+	if (!isLogIn && (newPassword.length < 8 || newPassword.length > 40))
+	    setPassword({ value: newPassword, color: 'error', errorMsg:'Doit être compris entre 8 et 40 caractères', errorValue: true });
+	else if (!isLogIn)
+	    setPassword({ value: newPassword, color: 'success', errorMsg:'Super mot de passe', errorValue: false });
+	else
+	    setPassword({ value: newPassword, color: null, errorMsg:'', errorValue: false});
     }
 
-    if (!isLogIn && (username.length < 3 || username.length > 20))
+    function usernameInputEdit(newUsername)
     {
-	errorValueUsername = true;
-	colorUsername = 'error';
-	errorMsgUsername = 'Doit être compris entre 3 et 20';
-    }
-    else if (!isLogIn)
-    {
-	errorValueUsername = false;
-	colorUsername = 'success';
-	errorMsgUsername = 'Super nom !';
+	if (!isLogIn && (newUsername.length < 3 || newUsername.length > 20))
+	    setUsername({ value: newUsername, color: 'error', errorMsg:'Doit être compris entre 3 et 20 caractères', errorValue: true });
+	else if (!isLogIn)
+    	    setUsername({ value: newUsername, color: 'success', errorMsg:'Super nom !', errorValue: false });
+	else
+	    setUsername({ value: newUsername, color: null, errorMsg:'', errorValue: false});
     }
 
     function switchLoginMod(newLoginValue)
     {
-	setUsername('');
-	setPassword('');
+	setUsername({ value: '', color: null, errorMsg:'', errorValue: false });
+	setPassword({ value: '', color: null, errorMsg:'', errorValue: false });
 	if (isLogIn)
 	    setIsLogIn(false);
 	else
@@ -52,9 +41,8 @@ function LoginMenu({ setIsConnected }) {
     }
 
     const handleSubmit = async (event) => {
-	if (errorValueUsername || errorValuePassword)
+	if (username.errorValue || password.errorValue)
 	    return;
-	console.log(username, password)
 	if (isLogIn)
 	{
 	    const res = await fetch('http://localhost:8000/api/login/?login=' + username + '&password=' + password);
@@ -67,45 +55,24 @@ function LoginMenu({ setIsConnected }) {
 	    }
 	    else if (res.status == 409)
 	    {
-		errorValuePassword = true;
-		colorPassword = 'error';
-		errorMsgPassword = 'Mauvais mot de passe ou nom d\'utilisateur';
-		errorValueUsername = true;
-		colorUsername = 'error';
-		errorMsgUsername = 'Mauvais mot de passe ou nom d\'utilisateur';
+		setUsername({ value: username.value, color: 'error', errorMsg:'Mauvais mot de passe ou nom d\'utilisateur', errorValue: true });
+		setPassword({ value: password.value, color: 'error', errorMsg:'Mauvais mot de passe ou nom d\'utilisateur', errorValue: true });
 	    }
 	}
 	else
 	{
 	    const res = await fetch('http://localhost:8000/api/signUp/?login=' + username + '&password=' + password);
+	    const text = await res.text();
 	    if (res.ok)
 	    {
 		setIsLogIn(true);
-/*		colorPassword = 'success';
-		errorMsgPassword = 'Inscrit avec succès !';
-		colorUsername = 'success';
-		errorMsgUsername = 'Inscrit avec succès !';
-		*/
-		setUsername('');
-		setPassword('');
+		setUsername({ value: '', color: 'success', errorMsg: 'Inscrit avec succès !', errorValue: false });
+		setPassword({ value: '', color: 'success', errorMsg: 'Inscrit avec succès !', errorValue: false });
 	    }
-	    else if (res.status == 1)
+	    else
 	    {
-		colorUsername = 'error';
-		errorValueUsername = true;
-		errorMsgUsername = 'Mauvais format';
-	    }
-	    else if (res.status == 2)
-	    {
-		colorPassword = 'error';
-		errorValuePassword = true;
-		errorMsgPassword = 'Mauvais format';
-	    }
-	    else if (res.status == 3)
-	    {
-		colorUsername = 'error';
-		errorValueUsername = true;
-		errorMsgUsername = 'Nom déjà utilisé !';
+		setUsername({ value: '', color: 'error', errorMsg: text, errorValue: true });
+		setPassword({ value: '', color: 'error', errorMsg: text, errorValue: true });
 	    }
 	}
     };
@@ -116,30 +83,30 @@ function LoginMenu({ setIsConnected }) {
 		<h2>{isLogIn ? (<>Connexion</>) : (<>Inscription</>)}</h2>
 		<div className="form-group">
 		    <TextField
-			error={errorValueUsername}
-			id={errorValueUsername ? "outlined-error-helper-text" : "username"}
-			helperText={errorMsgUsername}
-			color={colorUsername}
+			error={username.errorValue}
+			id={username.errorValue ? "outlined-error-helper-text" : "username"}
+			helperText={username.errorMsg}
+			color={username.color}
 			autoComplete="username"
 			label="Nom d'utilisateur"
 			type="text"
-			value={username}
-			onChange={evt => setUsername(evt.target.value)}
+			value={username.value}
+			onChange={evt => usernameInputEdit(evt.target.value)}
 			placeholder="Enter your username"
 			required
 		    />
 		</div>
 		<div className="form-group">
 		    <TextField
-			error={errorValuePassword}
-			id={errorValuePassword ? "outlined-error-helper-text" : "username"}
-			helperText={errorMsgPassword}
-			color={colorPassword}
+			error={password.errorValue}
+			id={password.errorValue ? "outlined-error-helper-text" : "username"}
+			helperText={password.errorMsg}
+			color={password.color}
 			autoComplete={isLogIn ? "current-password" : "new-password"}
 			label="Mot de passe"
-		type="password"
-			value={password}
-			onChange={evt => setPassword(evt.target.value)}
+			type="password"
+			value={password.value}
+			onChange={evt => passwordInputEdit(evt.target.value)}
 			placeholder="Enter your password"
 			required
 		    />

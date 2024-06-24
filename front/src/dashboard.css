@@ -1,0 +1,31 @@
+.ticket-status-box {
+    display: inline-block;
+    border: 2px solid grey;
+    margin: 5px;
+}
+
+.top-line-dashboard {
+    display: flex;
+    justify-content: center;
+}
+
+h2 {
+    max-width: 100%;
+    width: fit-content;
+}
+
+.top-dashboard-elem {
+    display: inline;
+    max-width: 100%;
+    width: fit-content;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 5px;
+    margin-right: 5px;
+    vertical-align: top;
+}
+
+.PopupCreation {
+    width: fit-content;
+    background-color: white;
+}
