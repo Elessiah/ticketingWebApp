@@ -5,7 +5,7 @@ import './LoginMenu.css';
 import Cookies from 'js-cookie';
 
 function LoginMenu({ setIsConnected }) {
-    
+
     const [username, setUsername] = useState({ value : '', color : null, errorMsg : '', errorValue : false });
     const [password, setPassword] = useState({ value : '', color : null, errorMsg : '', errorValue : false });
     const [isLogIn, setIsLogIn] = useState(true);

@@ -3,12 +3,10 @@ import React, { useState, useEffect } from 'react';
 import './dashboard.css';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
-import { Unstable_Popup as BasePopup } from '@mui/base/Unstable_Popup';
 import { Box, TextField, Button, Divider } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { styled } from '@mui/system';
 import { Select as BaseSelect, selectClasses } from '@mui/base/Select';
-import SelectPanel from './SelectPanel.jsx'
 
 function Dashboard() {
     const token = Cookies.get('token');
@@ -26,17 +24,9 @@ function Dashboard() {
 	    await navigate('/404');
 	}
     };
-    
+
     authentificationVerif();
 
-    const handleNewTicketButton = (event) => {
-	setAnchor(anchor ? null : event.currentTarget);
-	console.log(anchor);
-    };
-
-    const open = Boolean(anchor);
-    const id = open ? 'simple-popup' : undefined;
-						    
     return(<>
 	       <h2>Tableau de Bord</h2>
 	       <div className='top-line-dashboard'>
