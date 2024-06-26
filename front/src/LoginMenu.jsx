@@ -45,12 +45,12 @@ function LoginMenu({ setIsConnected }) {
 	    return;
 	if (isLogIn)
 	{
-	    const res = await fetch('http://localhost:8000/api/login/?login=' + username + '&password=' + password);
+	    const res = await fetch('http://localhost:8000/api/login/?login=' + username.value + '&password=' + password.value);
 	    if (res.ok)
 	    {
 		const data = await res.json();
 		Cookies.set('token', data.hash, {secure: true, sameSite: 'none'});
-		Cookies.set('username', username, {secure: true, sameSite: 'none'});
+		Cookies.set('username', username.value, {secure: true, sameSite: 'none'});
 		setIsConnected(true);
 	    }
 	    else if (res.status == 409)
@@ -61,7 +61,7 @@ function LoginMenu({ setIsConnected }) {
 	}
 	else
 	{
-	    const res = await fetch('http://localhost:8000/api/signUp/?login=' + username + '&password=' + password);
+	    const res = await fetch('http://localhost:8000/api/signUp/?login=' + username.value + '&password=' + password.value);
 	    const text = await res.text();
 	    if (res.ok)
 	    {

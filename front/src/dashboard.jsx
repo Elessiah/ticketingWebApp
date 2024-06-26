@@ -5,14 +5,22 @@ import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Divider } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { styled } from '@mui/system';
-import { Select as BaseSelect, selectClasses } from '@mui/base/Select';
+import NewTicketDialog from './newTicketDialog.jsx'
 
 function Dashboard() {
     const token = Cookies.get('token');
     const username = Cookies.get('username');
-    const [anchor, setAnchor] = React.useState(null);
+    const [anchor, setAnchor] = useState(null);
+    const [open, setOpen] = useState(false);
+    const [selectedValues, setSelectedValues] = useState({ priority:'',
+							   admin:'',
+							   category:'',
+							   assignedList:[],
+							   title:'',
+							   description:'' });
 
+
+    console.log('Valeurs récupérés : ', selectedValues);
     async function authentificationVerif()
     {
 	const navigate = await useNavigate();
@@ -25,6 +33,33 @@ function Dashboard() {
 	}
     };
 
+    async function createTicket()
+    {
+	const res = await fetch('http://localhost:8000/api/ticketManagement/add'
+				+ '?username=' + username
+				+ '&token=' + token
+				+ '&priority=' + selectedValues.priority
+				+ '&admin=' + selectedValues.admin
+				+ '&category' + selectedValues.category
+				+ '&assigned' + selectedValues.assignedList.toString()
+				+ '&title' + selectedValues.title
+				+ '&description' + selectedValues.description);
+	if (res.ok)
+	    console.log('Ticket successfully created !');
+	else
+	    console.error('Error during the creation of the ticket !');
+    }
+
+    const handleNewTicketButton = () => {
+	setOpen(true);
+    };
+
+    const handleClose = (newSelectedValues) => {
+	setOpen(false);
+	setSelectedValues(newSelectedValues);
+	createTicket()
+    };
+
     authentificationVerif();
 
     return(<>
@@ -32,15 +67,11 @@ function Dashboard() {
 	       <div className='top-line-dashboard'>
 		   <div className='top-dashboard-elem'>
 		       <Button variant="outlined" onClick={handleNewTicketButton} startIcon={<AddIcon />}>Nouveau</Button>
-		       <BasePopup id={id} open={open} anchor={anchor} placement='bottom-start'>
-			   <div className="PopupCreation">
-			       <h3>Créer un ticket</h3>
-			       <div className="Priority">
-				   <h4>Priorité</h4>
-				   <SelectPanel selectedValues={['Très Basse', 'Basse', 'Normal', 'Haute', 'Très Haute']} optDefaultValue={2}/>
-			       </div>
-			   </div>
-		       </BasePopup>
+		       <NewTicketDialog
+			   selectedValues={selectedValues}
+			   open={open}
+			   onClose={handleClose}
+		       />
 		   </div>
 		   <div className='top-dashboard-elem'>
 		       <TextField
