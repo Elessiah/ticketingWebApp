@@ -1,8 +1,7 @@
-//LoginMenu.js
+//LoginMenu.jsx
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button} from '@mui/material';
 import './LoginMenu.css';
-import Cookies from 'js-cookie';
 
 function LoginMenu({ setIsConnected }) {
 
@@ -49,8 +48,8 @@ function LoginMenu({ setIsConnected }) {
 	    if (res.ok)
 	    {
 		const data = await res.json();
-		Cookies.set('token', data.hash, {secure: true, sameSite: 'none'});
-		Cookies.set('username', username.value, {secure: true, sameSite: 'none'});
+		localStorage.setItem('token', data.hash);
+		localStorage.setItem('username', username.value);
 		setIsConnected(true);
 	    }
 	    else if (res.status == 409)

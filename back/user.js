@@ -4,6 +4,7 @@ class User
     {
 	this.username = username;
 	this.hash = hash;
+	this.tickets = new Array(new Map, new Map, new Map, new Map, new Map);
     }
 }
 

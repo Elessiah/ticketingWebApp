@@ -1,18 +1,21 @@
 // src/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import './dashboard.css';
-import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Divider } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import NewTicketDialog from './newTicketDialog.jsx'
+import RefreshIcon from '@mui/icons-material/Refresh';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import NewTicketDialog from './newTicketDialog.jsx';
+import VisibilityDialog from './VisibilityDialog.jsx';
 import {DragDropContext, Droppable, Draggable} from '@hello-pangea/dnd';
 
 function Dashboard() {
-    const token = Cookies.get('token');
-    const username = Cookies.get('username');
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
     const [anchor, setAnchor] = useState(null);
     const [open, setOpen] = useState(false);
+    const [openVisibility, setOpenVisibility] = useState(false);
     const [selectedValues, setSelectedValues] = useState({ priority:'',
 							   admin:'',
 							   category:'',
@@ -21,6 +24,7 @@ function Dashboard() {
 							   description:'' });
     const [sendTicket, setSendTicket] = useState(false);
     const [tickets, setTickets] = useState({ pending:[], covered:[], dev:[], toBeVerified:[], completed:[] });
+    const [visibility, setVisibility] = useState({ pending:true, covered:true, dev:true, toBeVerified:true, completed:false });
     const [search, setSearch] = useState('');
 
     async function executeSearch(testedArray, searchFilter)
@@ -62,8 +66,8 @@ function Dashboard() {
 	const res = await fetch('http://localhost:8000/api/verify/?username=' + username + '&token=' + token);
 	if (!res.ok) {
 	    console.log('retour to home');
-	    await Cookies.remove('token');
-	    await Cookies.remove('username');
+	    await localStorage.removeItem('token');
+	    await localStorage.removeItem('username');
 	    await navigate('/404');
 	}
     };
@@ -97,6 +101,15 @@ function Dashboard() {
 	setOpen(true);
     };
 
+    const handleVisibilityTicketButton = () => {
+	setOpenVisibility(true);
+    };
+
+    const handleCloseVisibility = (newSelectedValues) => {
+	setOpenVisibility(false);
+	setVisibility(newSelectedValues);
+    };
+
     const handleInterrupt = (newSelectedValues) => {
 	setOpen(false);
 	setSelectedValues(newSelectedValues);
@@ -123,6 +136,7 @@ function Dashboard() {
 	    <div className='ticket-container' key={ticket.title} style={{'backgroundColor': colorStyle}}>
 		<h3>{ticket.title}</h3>
 		<p>{ticket.description}</p>
+		<p><b>Responsable:</b> {ticket.admin} </p>
 	    </div>
 	);
     }
@@ -160,6 +174,17 @@ function Dashboard() {
 		       />
 		   </div>
 		   <div className='top-dashboard-elem'>
+		       <Button variant="outlined" onClick={(evt) => getTickets(search) } startIcon={<RefreshIcon />}>Rafraîchir</Button>
+		   </div>
+		   <div className='top-dashboard-elem'>
+		       <Button variant="outlined" onClick={handleVisibilityTicketButton} startIcon={<VisibilityIcon />}>Affichage</Button>
+		       <VisibilityDialog
+			   selectedValues={visibility}
+			   open={openVisibility}
+			   onClose={handleCloseVisibility}
+		       />
+		   </div>
+		   <div className='top-dashboard-elem'>
 		       <TextField
 			   label='Search ticket'
 			   type='text'
@@ -169,32 +194,41 @@ function Dashboard() {
 		   </div>
 	       </div>
 	       <div className='ticket-status-menu'>
+		   { visibility.pending && (
 		   <div className='ticket-status-box'>
-		       <p>En attente {tickets.pending.length}</p>
+		       <p>En Attente {tickets.pending.length}</p>
 		       <Divider />
 		       {tickets.pending.map((displayTicket))}
 		   </div>
+		   )}
+		   { visibility.covered && (
 	       	   <div
 		       className='ticket-status-box'
 		   >
-		       <p>Pris en charge {tickets.covered.length}</p>
+		       <p>Pris En Charge {tickets.covered.length}</p>
 		       <Divider />
 		       {tickets.covered.map((displayTicket))}
 		   </div>
+		   )}
+		   { visibility.dev && (
 		   <div
 		       className='ticket-status-box'
 		   >
-		       <p>En développement {tickets.dev.length}</p>
+		       <p>En Développement {tickets.dev.length}</p>
 		       <Divider />
 		       {tickets.dev.map((displayTicket))}
 		   </div>
+		   )}
+		   { visibility.toBeVerified && (
 		   <div
 		       className='ticket-status-box'
 		   >
-		       <p>A vérifier {tickets.toBeVerified.length}</p>
+		       <p>A Vérifier {tickets.toBeVerified.length}</p>
 		       <Divider />
 		       {tickets.toBeVerified.map((displayTicket))}
 		   </div>
+		   )}
+		   { visibility.completed && (
 		   <div
 		       className='ticket-status-box'
 		   >
@@ -202,6 +236,7 @@ function Dashboard() {
 		       <Divider />
 		       {tickets.completed.map((displayTicket))}
 		   </div>
+		   )}
 	       </div>
 	   </>)
 }

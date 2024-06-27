@@ -2,7 +2,6 @@
 import OutlinedInput from '@mui/material/OutlinedInput';
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button, Dialog, DialogTitle, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
-import Cookies from 'js-cookie';
 import './newTicketDialog.css';
 
 const ITEM_HEIGHT = 48;
@@ -17,9 +16,9 @@ const MenuProps = {
 };
 
 function NewTicketDialog(props) {
-    const username = Cookies.get('username');
-    const token = Cookies.get('token');
-    const {onClose, selectedValues, open, onInterrupt } = props;
+    const username = localStorage.getItem('username');
+    const token = localStorage.getItem('token');
+    const {onClose, selectedValues, open, onInterrupt, title } = props;
     const [values, setValues] = useState({ priority:selectedValues.priority,
 					   admin:selectedValues.admin,
 					   category:selectedValues.category,
@@ -89,7 +88,7 @@ function NewTicketDialog(props) {
 
     return (
 	<Dialog onClose={handleClose} open={open}>
-	    <DialogTitle>Créer un ticket</DialogTitle>
+	    <DialogTitle>{title}</DialogTitle>
 	    <div className='formNewComponent'>
 	    <FormControl fullWidth>
 		<InputLabel id="priority-select-label">Priorité</InputLabel>
