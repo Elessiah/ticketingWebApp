@@ -1,7 +1,11 @@
 .ticket-status-box {
+    vertical-align: top;
     display: inline-block;
     border: 2px solid grey;
     margin: 5px;
+    width: 250px;
+    height: 400px;
+    overflow: auto;
 }
 
 .top-line-dashboard {
@@ -28,4 +32,18 @@ h2 {
 .PopupCreation {
     width: fit-content;
     background-color: white;
+}
+
+.ticket-container {
+    background-color: grey;
+    border-radius: 16px;
+    box-sizing: inherit;
+    border-color: black;
+    border-style: solid;
+    margin: 5px;
+}
+
+.ticket-container h3, p{
+    margin: 0;
+    margin-bottom: 5px;
 }

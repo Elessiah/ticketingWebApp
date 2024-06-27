@@ -3,6 +3,7 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button, Dialog, DialogTitle, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
 import Cookies from 'js-cookie';
+import './newTicketDialog.css';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -18,7 +19,7 @@ const MenuProps = {
 function NewTicketDialog(props) {
     const username = Cookies.get('username');
     const token = Cookies.get('token');
-    const {onClose, selectedValues, open } = props;
+    const {onClose, selectedValues, open, onInterrupt } = props;
     const [values, setValues] = useState({ priority:selectedValues.priority,
 					   admin:selectedValues.admin,
 					   category:selectedValues.category,
@@ -51,10 +52,11 @@ function NewTicketDialog(props) {
     }
 
     const handleClose = () => {
-	onClose(selectedValues);
+	onInterrupt(values);
     };
 
     const handleSubmit = () => {
+	console.log(values);
 	onClose(values);
     };
 
@@ -88,6 +90,7 @@ function NewTicketDialog(props) {
     return (
 	<Dialog onClose={handleClose} open={open}>
 	    <DialogTitle>Créer un ticket</DialogTitle>
+	    <div className='formNewComponent'>
 	    <FormControl fullWidth>
 		<InputLabel id="priority-select-label">Priorité</InputLabel>
 		<Select
@@ -104,69 +107,84 @@ function NewTicketDialog(props) {
 		    <MenuItem value={'Très Haute'}>Très Haute</MenuItem>
 		</Select>
 	    </FormControl>
-	    <FormControl fullWidth>
-		<InputLabel id="admin-select-label">Responsable</InputLabel>
-		<Select
-		    labelId="admin-select-label"
-		    id="admin-simple-select"
-		    value={values.admin}
-		    label="Responsable"
-		    onChange={(event) => { setAdmin(event.target.value) }}
-		>
-		    { users.map((user) => (
-			<MenuItem key={user} value={user}>{user}</MenuItem>
-		    ))}
-		</Select>
-	    </FormControl>
-	    <FormControl fullWidth>
-		<InputLabel id="category-select-label">Catégorie</InputLabel>
-		<Select
-		    labelId="category-select-label"
-		    id="category-simple-select"
-		    value={values.category}
-		    label="Catégorie"
-		    onChange={(event) => { setCategory(event.target.value) }}
-		>
-		    <MenuItem value={'Code'}>Code</MenuItem>
-		    <MenuItem value={'Marketing'}>Marketing</MenuItem>
-		    <MenuItem value={'Documentation'}>Documentation</MenuItem>
-		    <MenuItem value={'Evènement'}>Evènement</MenuItem>
-		</Select>
-	    </FormControl>
-	    <FormControl fullWidth>
-		<InputLabel id="assignement-select-label">Assigné(e)(s)</InputLabel>
-		<Select
-		    labelId="assignement-select-label"
-		    id="assignement-simple-select"
-		    multiple
-		    value={values.assignedList}
-		    label="Assigné(e)(s)"
-		    input={<OutlinedInput label="Assigné(e)(s)"/>}
-		    renderValue={(selected) => selected.join(', ')}
-		    onChange={(event) => { setAssignedList(event.target.value) }}
-		    MenuProps={MenuProps}
-		>
-		    { users.map((user) => (
-			<MenuItem key={user} value={user}>
-			    <Checkbox checked={values.assignedList.indexOf(user) > -1} />
-			    <ListItemText primary={user} />
-			</MenuItem>
-		    ))}
-		</Select>
-	    </FormControl>
+	    </div>
+	    <div className='formNewComponent'>
+		<FormControl fullWidth>
+		    <InputLabel id="admin-select-label">Responsable</InputLabel>
+		    <Select
+			labelId="admin-select-label"
+			id="admin-simple-select"
+			value={values.admin}
+			label="Responsable"
+			onChange={(event) => { setAdmin(event.target.value) }}
+		    >
+			{ users.map((user) => (
+			    <MenuItem key={user} value={user}>{user}</MenuItem>
+			))}
+		    </Select>
+		</FormControl>
+	    </div>
+	    <div className='formNewComponent'>
+		<FormControl fullWidth>
+		    <InputLabel id="category-select-label">Catégorie</InputLabel>
+		    <Select
+			labelId="category-select-label"
+			id="category-simple-select"
+			value={values.category}
+			label="Catégorie"
+			onChange={(event) => { setCategory(event.target.value) }}
+		    >
+			<MenuItem value={'Code'}>Code</MenuItem>
+			<MenuItem value={'Marketing'}>Marketing</MenuItem>
+			<MenuItem value={'Documentation'}>Documentation</MenuItem>
+			<MenuItem value={'Evènement'}>Evènement</MenuItem>
+		    </Select>
+		</FormControl>
+	    </div>
+	    <div className='formNewComponent'>
+		<FormControl fullWidth>
+		    <InputLabel id="assignement-select-label">Assigné(e)(s)</InputLabel>
+		    <Select
+			labelId="assignement-select-label"
+			id="assignement-simple-select"
+			multiple
+			value={values.assignedList}
+			label="Assigné(e)(s)"
+			input={<OutlinedInput label="Assigné(e)(s)"/>}
+			renderValue={(selected) => selected.join(', ')}
+			onChange={(event) => { setAssignedList(event.target.value) }}
+			MenuProps={MenuProps}
+		    >
+			{ users.map((user) => (
+			    <MenuItem key={user} value={user}>
+				<Checkbox checked={values.assignedList.indexOf(user) > -1} />
+				<ListItemText primary={user} />
+			    </MenuItem>
+			))}
+		    </Select>
+		</FormControl>
+	    </div>
+	    <div className='formNewComponent'>
 	    <TextField
+		className='formNewComponent'
 		label="Titre"
 		value={values.title}
 		onChange={evt => updateTitle(evt.target.value)}
 		variant="outlined" />
+	    </div>
+	    <div className='formNewComponent'>
 	    <TextField
+		className='formNewComponent'
 		id="outlined-multiline-static"
 		label="Description"
 		multiline
 		rows={4}
 		onChange={evt => updateDescription(evt.target.value)}
 	    />
-	    <Button variant="contained" onClick={handleSubmit}>Créer</Button>
+	    </div>
+	    <div className='formNewComponent'>
+		<Button variant="contained" className='formNewComponent' onClick={handleSubmit}>Créer</Button>
+	    </div>
 	</Dialog>
     )
 }

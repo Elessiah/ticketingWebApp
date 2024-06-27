@@ -7,7 +7,6 @@ import NotFundPage from './notFundPage.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
 	<Router>
 	    <Routes>
 		<Route path="/" element={<App />} />
@@ -15,6 +14,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 		<Route path="/404" element={<NotFundPage />} />
 	    </Routes>
 	</Router>
-    </React.StrictMode>,
 )
 

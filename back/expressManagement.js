@@ -16,7 +16,7 @@ class expressManagement {
     constructor(port, users) {
 	this.port = port;
 	this.users = users;
-	this.userList = new Map();
+	this.userList = new Array();
 	this.ticketStatus = new Array(new Map, new Map, new Map, new Map, new Map);
 	this.users.forEach((element) => this.userList.push(element.username));
 	this.app = express();
@@ -46,8 +46,10 @@ class expressManagement {
 		    await this.rmTicket(req, res);
 		else if (req.path === '/api/ticketManagement/mv')
 		    await this.mvTicket(req, res);
-		else if (req.path === '/api/ticketManagement/get')
+		else if (req.path === '/api/ticketManagement/getTicket')
 		    await this.getTicket(req, res);
+		else if (req.path === '/api/ticketManagement/getCategory')
+		    await this.getCategory(req, res);
 		else
 		    await res.status(404).send('<h1>Sorry, we cannot find that !</h1>');
 	    }
@@ -65,8 +67,8 @@ class expressManagement {
 	    return false;
 	if (!this.users.has(username))
 	    return false;
-	const inputToken = req.query.token.replaceAll(" ", "+");
-	if (inputToken === this.users.get(username).hash)
+	const inputToken = token.replaceAll(" ", "+");
+	if (inputToken === (this.users.get(username)).hash)
 	    return true;
 	return false;
     }
@@ -79,13 +81,14 @@ class expressManagement {
 	    || lodash.isNil(req.query.category) || lodash.isNil(req.query.assigned)
 	    || lodash.isNil(req.query.title) || lodash.isNil(req.query.description))
 	    return await res.status(401).send('Missing one or more argument');
-	const boardAssignedList = req.query.assignedList.split(',');
+	const boardAssignedList = await req.query.assigned.split(',');
 	await this.ticketStatus[0].set(req.query.title, new Ticket(req.query.priority,
-							    req.query.admin,
-							    req.query.category,
-							    boardAssignedList,
-							    req.query.title,
-							    req.query.description));
+								   req.query.admin,
+								   req.query.category,
+								   boardAssignedList,
+								   req.query.title,
+								   req.query.description));
+	console.log('Map after creation', await this.ticketStatus);
 	return await res.status(200).send('Ticket created !');
     }
 
@@ -115,7 +118,7 @@ class expressManagement {
 	target.description = req.query.description;
 	await res.status(200).send('Ticket edited !');
     }
-
+    
     async rmTicket(req, res)
     {
 	if (! await this.verifToken(req.query.username, req.query.token))
@@ -153,28 +156,37 @@ class expressManagement {
     async getTicket(req, res)
     {
 	if (! await this.verifToken(req.query.username, req.query.token))
-	    return await res.status(406).send('Wrong token' + this.users.get(req.query.username).hash + ' and input ' + inputToken);
+	    return await res.status(406).send('Wrong token or username');
 	if (lodash.isNil(req.query.title))
-	    return await res.status(401).send('Missing one or more argument');
+	    return await res.status(401).send('Missing title argument');
 	for (i = 0; i < 5; i += 1)
 	{
 	    if (await this.ticketStatus[i].has(req.query.title))
 	    {
-		const ticket = this.ticketStatus[i].get(req.query.title);
+		const ticket = await this.ticketStatus[i].get(req.query.title);
 		return await res.json(ticket);
 	    }
 	}
 	return await res.status(404).send('Ticket not found');
     }
 
+    async getCategory(req, res)
+    {
+	if (! await this.verifToken(req.query.username, req.query.token))
+	    return await res.status(406).send('Wrong token or username');
+	if (lodash.isNil(req.query.category))
+	    return await res.status(401).send('Missing category argument');
+	console.log(req.query.category);
+	console.log(this.ticketStatus[0]);
+	console.log(Array.from(this.ticketStatus[req.query.category], ([name, value]) => ( value )));
+    return await res.json(Array.from(this.ticketStatus[req.query.category], ([name, value]) => ( value )));
+    }
+
     async getUsers(req, res)
     {
-	if (lodash.isNil(req.query.token) || lodash.isNil(req.query.username))
-	    return await res.status(401).send('Missing one or more argument');
-	const inputToken = req.query.token.replaceAll(" ", "+");
-	if (inputToken === this.users.get(req.query.username).hash)
-	    return await res.json(this.userList.toString());
-	return await res.status(406).send('Wrong token' + this.users.get(req.query.username).hash + ' et input ' + inputToken);
+	if (! await this.verifToken(req.query.username, req.query.token))
+	    return await res.status(406).send('Wrong token or username');
+	return await res.json(this.userList.toString());
     }
 
     async manageSignUp(req, res)
@@ -211,13 +223,13 @@ class expressManagement {
 
     async manageVerify(req, res)
     {
-	if (verifToken(req.query.username, req.query.token))
+	if (await this.verifToken(req.query.username, req.query.token) === true)
 	{
 	    const inputToken = req.query.token;
 	    await res.send({ inputToken });
 	}
 	else
-	    return await res.status(406).send('Wrong token' + this.users.get(req.query.username).hash + ' et input ' + inputToken);
+	    return await res.status(406).send('Wrong token !');
     }
 }
 
