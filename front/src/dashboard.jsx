@@ -158,7 +158,7 @@ function Dashboard() {
 	createTicket(newSelectedValues);
     };
 
-    function displayTicket(ticket)
+    function displayTicket(ticket, index)
     {
 	if (ticket === null)
 	    return;
@@ -172,14 +172,28 @@ function Dashboard() {
 	else if (ticket.priority === 'Très Haute')
 	    colorStyle = 'red';
 	return(
-	    <div className='ticket-container'
-		 key={ticket.title}
-		 style={{'backgroundColor': colorStyle}}
-		 onClick={(evt) => handleEditTicketClick(ticket)}>
-		<h3>{ticket.title}</h3>
-		<p>{ticket.description}</p>
-		<p><b>Responsable:</b> {ticket.admin} </p>
-	    </div>
+	    <Draggable
+		draggableId={ticket.id}
+		index={index}
+		key={ticket.id}
+	    >
+		{(provided) => (
+		    <div
+			{...provided.dragHandleProps}
+			{...provided.draggableProps}
+			ref={provided.innerRef}
+		    >
+			<div className='ticket-container'
+			     key={ticket.title}
+			     style={{'backgroundColor': colorStyle}}
+			     onClick={(evt) => handleEditTicketClick(ticket)}>
+			    <h3>{ticket.title}</h3>
+			    <p>{ticket.description}</p>
+			    <p><b>Responsable:</b> {ticket.admin} </p>
+			</div>
+		    </div>
+		)}
+	    </Draggable>
 	);
     };
     
@@ -223,51 +237,60 @@ function Dashboard() {
 		       />
 		   </div>
 	       </div>
-	       <div className='ticket-status-menu'>
-		   { visibility.pending && (
-		       <div className='ticket-status-box'>
-			   <p>En Attente {tickets.pending.length}</p>
-			   <Divider />
-			   {tickets.pending.map((displayTicket))}
-		       </div>
-		   )}
-		   { visibility.covered && (
-	       	       <div
-			   className='ticket-status-box'
-		       >
-			   <p>Pris En Charge {tickets.covered.length}</p>
-			   <Divider />
-			   {tickets.covered.map((displayTicket))}
-		       </div>
-		   )}
-		   { visibility.dev && (
-		       <div
-			   className='ticket-status-box'
-		       >
-			   <p>En Développement {tickets.dev.length}</p>
-			   <Divider />
-			   {tickets.dev.map((displayTicket))}
-		       </div>
-		   )}
-		   { visibility.toBeVerified && (
-		       <div
-			   className='ticket-status-box'
-		       >
-			   <p>A Vérifier {tickets.toBeVerified.length}</p>
-			   <Divider />
-			   {tickets.toBeVerified.map((displayTicket))}
-		       </div>
-		   )}
-		   { visibility.completed && (
-		       <div
-			   className='ticket-status-box'
-		       >
-			   <p>Terminé {tickets.completed.length}</p>
-			   <Divider />
-			   {tickets.completed.map((displayTicket))}
-		       </div>
-		   )}
-	       </div>
+	       <DragDropContext onDragEnd={(source, destination, type) => { console.log(source, destination, type); }} >
+		   <div className='ticket-status-menu'>
+		       { visibility.pending && (
+			   <div className='ticket-status-box'>
+			       <p>En Attente {tickets.pending.length}</p>
+			       <Divider />
+			       <Droppable droppableId="DropPending">
+				   {(provided) => (
+				       <div {...provided.droppableProps} ref={provided.inneRef}>
+					   {tickets.pending.map((displayTicket))}
+					   {provided.placeholder}
+				       </div>
+				   )}
+			       </Droppable>
+			   </div>
+		       )}
+		       { visibility.covered && (
+	       		   <div
+			       className='ticket-status-box'
+			   >
+			       <p>Pris En Charge {tickets.covered.length}</p>
+			       <Divider />
+			       {tickets.covered.map((displayTicket))}
+			   </div>
+		       )}
+		       { visibility.dev && (
+			   <div
+			       className='ticket-status-box'
+			   >
+			       <p>En Développement {tickets.dev.length}</p>
+			       <Divider />
+			       {tickets.dev.map((displayTicket))}
+			   </div>
+		       )}
+		       { visibility.toBeVerified && (
+			   <div
+			       className='ticket-status-box'
+			   >
+			       <p>A Vérifier {tickets.toBeVerified.length}</p>
+			       <Divider />
+			       {tickets.toBeVerified.map((displayTicket))}
+			   </div>
+		       )}
+		       { visibility.completed && (
+			   <div
+			       className='ticket-status-box'
+			   >
+			       <p>Terminé {tickets.completed.length}</p>
+			       <Divider />
+			       {tickets.completed.map((displayTicket))}
+			   </div>
+		       )}
+		   </div>
+	       </DragDropContext>
 	   </>)
 }
 
