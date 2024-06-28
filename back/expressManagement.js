@@ -26,6 +26,8 @@ class expressManagement {
 	    console.log(`Server listening on port`, this.port);
 	});
 
+	this.idCount = 0;
+
 	this.app.all('*', async  (req, res) => {
 	    try
 	    {
@@ -74,7 +76,7 @@ class expressManagement {
 
     async addTicketToAssigned(elem, ticket)
     {
-	await (await this.users.get(elem)).tickets[0].set(ticket.title, ticket);
+	await (await this.users.get(elem)).tickets[0].set(ticket.id, ticket);
     }
 
     async newTicket(req, res)
@@ -86,17 +88,31 @@ class expressManagement {
 	    || lodash.isNil(req.query.title) || lodash.isNil(req.query.description))
 	    return await res.status(401).send('Missing one or more argument');
 	const boardAssignedList = await req.query.assigned.split(',');
-	const ticket = new Ticket(req.query.priority,
+	const ticket = new Ticket(this.idCount,
+				  req.query.priority,
 				  req.query.admin,
 				  req.query.category,
 				  boardAssignedList,
 				  req.query.title,
 				  req.query.description);
-	await boardAssignedList.forEach((elem) => (this.addTicketToAssigned(elem, ticket)));
+	this.idCount += 1;
+	await boardAssignedList.forEach((elem) => { this.addTicketToAssigned(elem, ticket) });
 	if (!boardAssignedList.includes(ticket.admin))
-	    await (await this.users.get(ticket.admin)).tickets[0].set(ticket.title, ticket);
+	    await (await this.users.get(ticket.admin)).tickets[0].set(ticket.id, ticket);
 	//console.log('Assigned member : ', boardAssignedList, 'admin :', ticket.admin, 'users : ', this.users);
 	return await res.status(200).send('Ticket created !');
+    }
+
+    async refreshUserVisibility(id, assignedList, prevAssignedList, ticket)
+    {
+	await assignedList.map((elem) => {
+	    if (! prevAssignedList.includes(elem))
+		deleteUserTicket(this.users.get(elem), null, null, id);
+	});
+	await prevAssignedList.map((elem) => {
+	    if (!assignedList.includes(elem))
+		this.addTicketToAssigned(elem, ticket);
+	});		
     }
 
     async editTicket(req, res)
@@ -106,38 +122,36 @@ class expressManagement {
 	if (lodash.isNil(req.query.priority) || lodash.isNil(req.query.admin)
 	    || lodash.isNil(req.query.category) || lodash.isNil(req.query.assigned)
 	    || lodash.isNil(req.query.title) || lodash.isNil(req.query.description)
-	    || lodash.isNil(req.query.oldTitle))
+	    || lodash.isNil(req.query.idTicket))
 	    return await res.status(401).send('Missing one or more argument');
 	let target = null;
-	for (i = 0; i < 5; i += 1)
+	for (let i = 0; i < 5; i += 1)
 	{
-	    if (await (await this.users.get(req.query.username)).tickets[i].has(req.query.oldtitle))
-		target = await (await this.users.get(req.query.username)).tickets[i].get(req.query.oldTitle);
+	    if (await (await this.users.get(req.query.username)).tickets[i].has(Number(req.query.idTicket)))
+		target = await (await this.users.get(req.query.username)).tickets[i].get(Number(req.query.idTicket));
 	}
 	if (target === null)
 	    return await res.status(404).send('Ticket not found !');
 
+	const prevAssignedList = Array.from(target.assignedList);
 	target.priority = req.query.priority;
 	target.admin = req.query.admin;
 	target.category = req.query.category;
-	target.assigned = req.query.assigned;
+	target.assignedList = req.query.assigned.split(',');
 	target.title = req.query.title;
 	target.description = req.query.description;
+	await this.refreshUserVisibility(target.id, target.assignedList, prevAssignedList, target);
 	await res.status(200).send('Ticket edited !');
     }
 
-    async deleteUserTicket(value, key, map, title, adminName)
+    async deleteUserTicket(value, key, map, id)
     {
     	for (i = 0; i < 5; i += 1)
 	{
-	    if (await value.tickets[i].has(title))
+	    if (await value.tickets[i].has(id))
 	    {
-		const ticket = await value.tickets[i].get(title);
-		if (ticket.admin === adminName)
-		{
-		    await value.tickets[i].delete(title);
-		    await res.status(200).send('Ticket removed !');
-		}
+		await value.tickets[i].delete(id);
+		await res.status(200).send('Ticket removed !');
 	    }
 	}
     }
@@ -145,31 +159,32 @@ class expressManagement {
     async rmTicket(req, res)
     {
 	if (! await this.verifToken(req.query.username, req.query.token))
-	    return await res.status(406).send('Wrong token' + this.users.get(req.query.username).hash + ' and input ' + inputToken);
-	if (lodash.isNil(req.query.title))
+	    return await res.status(406).send('Wrong token or username');
+	if (lodash.isNil(req.query.id))
 	    return await res.status(401).send('Missing one or more argument');
-	const username = req.query.username;
-	this.users.forEach((value, key, map) => ( this.deleteUserTicket(value, key, map, username)));
+	this.users.forEach((value, key, map) => ( this.deleteUserTicket(value, key, map, id)));
 	await res.status(404).send('Ticket not found !');
     }
 
-    async userMvTicket(value, key, map, title, currentStatus, targetStatus)
+    async userMvTicket(value, key, map, id, currentStatus, targetStatus)
     {
-	const ticket = await (value).tickets[currentStatus].get(title);
-	await (value).tickets[targetStatus].set(title, ticket);
-	await (value).tickets[currentStatus].delete(title);
+	const ticket = await (value).tickets[currentStatus].get(id);
+	await (value).tickets[targetStatus].set(id, ticket);
+	await (value).tickets[currentStatus].delete(id);
     }
 
     async mvTicket(req, res)
     {
-	if (! await this.verifToken(req.query.username, req.query.token))
-	    return await res.status(406).send('Wrong token' + this.users.get(req.query.username).hash + ' and input ' + inputToken);
+/*	if (! await this.verifToken(req.query.username, req.query.token))
+	    return await res.status(406).send('Wrong token or username'); */
 	if (lodash.isNil(req.query.currentStatus) || lodash.isNil(req.query.targetStatus)
-	    || lodash.isNil(req.query.title))
+	    || lodash.isNil(req.query.id))
 	    return await res.status(401).send('Missing one or more argument');
-	if (!await (await this.users.get(req.query.username)).tickets[req.query.currentStatus].has(req.query.title))
+	if (!await (await this.users.get(req.query.username)).tickets[req.query.currentStatus].has(Number(req.query.id)))
 	    return await res.status(404).send('Ticket not found');
-	await this.users.forEach((value, key, map) => (this.userMvTicket(value, key, map, req.query.title, req.query.currentStatus, req.query.targetStatus)));
+	await this.users.forEach((value, key, map) => {
+	    this.userMvTicket(value, key, map, Number(req.query.id), Number(req.query.currentStatus), Number(req.query.targetStatus))
+	});
 	return await res.status(200).send('Ticket(s) moved !');
     }
 
@@ -177,14 +192,14 @@ class expressManagement {
     {
 	if (! await this.verifToken(req.query.username, req.query.token))
 	    return await res.status(406).send('Wrong token or username');
-	if (lodash.isNil(req.query.title))
+	if (lodash.isNil(req.query.id))
 	    return await res.status(401).send('Missing title argument');
 	for (i = 0; i < 5; i += 1)
 	{
 	    const user = await this.users.get(req.query.username);
-	    if (await this.ticketStatus[i].has(req.query.title))
+	    if (await this.ticketStatus[i].has(req.query.id))
 	    {
-		const ticket = await user.tickets[i].get(req.query.title);
+		const ticket = await user.tickets[i].get(req.query.id);
 		return await res.json(ticket);
 	    }
 	}
@@ -197,7 +212,6 @@ class expressManagement {
 	    return await res.status(406).send('Wrong token or username');
 	if (lodash.isNil(req.query.category))
 	    return await res.status(401).send('Missing category argument');
-	console.log(await this.users.get(req.query.username));
 	return await res.json(Array.from(await (await this.users.get(req.query.username)).tickets[req.query.category], ([name, value]) => ( value )));
     }
 

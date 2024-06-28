@@ -13,15 +13,20 @@ import {DragDropContext, Droppable, Draggable} from '@hello-pangea/dnd';
 function Dashboard() {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
-    const [anchor, setAnchor] = useState(null);
-    const [open, setOpen] = useState(false);
     const [openVisibility, setOpenVisibility] = useState(false);
     const [selectedValues, setSelectedValues] = useState({ priority:'',
 							   admin:'',
 							   category:'',
 							   assignedList:[],
 							   title:'',
-							   description:'' });
+							   description:'',
+							   id:0});
+    const [ticketMenu, setTicketMenu] = useState({ open:false,
+						   title:'Créer un ticket',
+						   values:selectedValues,
+						   onClose:null,
+						   onInterrupt:null});
+
     const [sendTicket, setSendTicket] = useState(false);
     const [tickets, setTickets] = useState({ pending:[], covered:[], dev:[], toBeVerified:[], completed:[] });
     const [visibility, setVisibility] = useState({ pending:true, covered:true, dev:true, toBeVerified:true, completed:false });
@@ -72,25 +77,48 @@ function Dashboard() {
 	}
     };
 
-    async function createTicket()
+    async function createTicket(values)
     {
 	const res = await fetch('http://localhost:8000/api/ticketManagement/add'
 				+ '?username=' + username
 				+ '&token=' + token
-				+ '&priority=' + selectedValues.priority
-				+ '&admin=' + selectedValues.admin
-				+ '&category=' + selectedValues.category
-				+ '&assigned=' + selectedValues.assignedList.toString()
-				+ '&title=' + selectedValues.title
-				+ '&description=' + selectedValues.description);
+				+ '&priority=' + values.priority
+				+ '&admin=' + values.admin
+				+ '&category=' + values.category
+				+ '&assigned=' + values.assignedList.toString()
+				+ '&title=' + values.title
+				+ '&description=' + values.description);
 	if (res.ok)
 	{
 	    console.log('Ticket successfully created !');
-	    getTickets('');
+	    getTickets(search);
 	}
 	else
 	    console.error('Error during the creation of the ticket !');
     }
+
+    async function editTicket(values)
+    {
+	console.log('Values edit ',values);
+	const res = await fetch('http://localhost:8000/api/ticketManagement/edit'
+				+ '?username=' + username
+				+ '&token=' + token
+				+ '&priority=' + values.priority
+				+ '&admin=' + values.admin
+				+ '&category=' + values.category
+				+ '&assigned=' + values.assignedList.toString()
+				+ '&title=' + values.title
+				+ '&idTicket=' + values.id
+				+ '&description=' + values.description);
+	if (res.ok)
+	{
+	    console.log('Ticket successfully edited !');
+	    getTickets(search);
+	}
+	else
+	    console.error('Error during the edition of the ticket !');
+    };
+    
 
     function searchTicket(newSearch) {
 	setSearch(newSearch);
@@ -98,7 +126,17 @@ function Dashboard() {
     };
     
     const handleNewTicketButton = () => {
-	setOpen(true);
+	setTicketMenu({ open:true, title:'Créer un ticket', values:selectedValues, onClose:handleClose, onInterrupt:handleInterrupt});
+    };
+
+    const handleEditClose = (values) => {
+	setTicketMenu(prevValues => ({...prevValues, open:false}));
+	editTicket(values);
+    };
+
+    const handleEditTicketClick = (ticket) => {
+	console.log('Ticket :', ticket);
+	setTicketMenu({ open:true, title:'Editer un ticket', values:ticket, onClose:handleEditClose, onInterrupt:handleInterrupt});
     };
 
     const handleVisibilityTicketButton = () => {
@@ -111,18 +149,19 @@ function Dashboard() {
     };
 
     const handleInterrupt = (newSelectedValues) => {
-	setOpen(false);
+	setTicketMenu(prevValues => ({...prevValues, open:false}));
 	setSelectedValues(newSelectedValues);
     };
     
     const handleClose = (newSelectedValues) => {
-	setOpen(false);
-        setSelectedValues(newSelectedValues);
-	setSendTicket(true);
+	setTicketMenu(prevValues => ({...prevValues, open:false}));
+	createTicket(newSelectedValues);
     };
 
     function displayTicket(ticket)
     {
+	if (ticket === null)
+	    return;
 	let colorStyle = 'yellow';
 	if (ticket.priority === 'Très Basse')
 	    colorStyle = 'lightgreen';
@@ -133,44 +172,35 @@ function Dashboard() {
 	else if (ticket.priority === 'Très Haute')
 	    colorStyle = 'red';
 	return(
-	    <div className='ticket-container' key={ticket.title} style={{'backgroundColor': colorStyle}}>
+	    <div className='ticket-container'
+		 key={ticket.title}
+		 style={{'backgroundColor': colorStyle}}
+		 onClick={(evt) => handleEditTicketClick(ticket)}>
 		<h3>{ticket.title}</h3>
 		<p>{ticket.description}</p>
 		<p><b>Responsable:</b> {ticket.admin} </p>
 	    </div>
 	);
-    }
-	
-
+    };
+    
+    
     useEffect(() => {
 	getTickets('');
-	setSendTicket(false);
     }, []);
 
     authentificationVerif();
-    if (sendTicket)
-    {
-	createTicket()
-	setSelectedValues({ priority:'',
-			    admin:'',
-			    category:'',
-			    assignedList:[],
-			    title:'',
-			    description:'' });
-	setSendTicket(false);
-    }
-
-
+    
     return(<>
 	       <h2>Tableau de Bord</h2>
 	       <div className='top-line-dashboard'>
 		   <div className='top-dashboard-elem'>
 		       <Button variant="outlined" onClick={handleNewTicketButton} startIcon={<AddIcon />}>Nouveau</Button>
 		       <NewTicketDialog
-			   selectedValues={selectedValues}
-			   open={open}
-			   onClose={handleClose}
-			   onInterrupt={handleInterrupt}
+			   selectedValues={ticketMenu.values}
+			   open={ticketMenu.open}
+			   onClose={ticketMenu.onClose}
+			   onInterrupt={ticketMenu.onInterrupt}
+			   title={ticketMenu.title}
 		       />
 		   </div>
 		   <div className='top-dashboard-elem'>
@@ -195,47 +225,47 @@ function Dashboard() {
 	       </div>
 	       <div className='ticket-status-menu'>
 		   { visibility.pending && (
-		   <div className='ticket-status-box'>
-		       <p>En Attente {tickets.pending.length}</p>
-		       <Divider />
-		       {tickets.pending.map((displayTicket))}
-		   </div>
+		       <div className='ticket-status-box'>
+			   <p>En Attente {tickets.pending.length}</p>
+			   <Divider />
+			   {tickets.pending.map((displayTicket))}
+		       </div>
 		   )}
 		   { visibility.covered && (
-	       	   <div
-		       className='ticket-status-box'
-		   >
-		       <p>Pris En Charge {tickets.covered.length}</p>
-		       <Divider />
-		       {tickets.covered.map((displayTicket))}
-		   </div>
+	       	       <div
+			   className='ticket-status-box'
+		       >
+			   <p>Pris En Charge {tickets.covered.length}</p>
+			   <Divider />
+			   {tickets.covered.map((displayTicket))}
+		       </div>
 		   )}
 		   { visibility.dev && (
-		   <div
-		       className='ticket-status-box'
-		   >
-		       <p>En Développement {tickets.dev.length}</p>
-		       <Divider />
-		       {tickets.dev.map((displayTicket))}
-		   </div>
+		       <div
+			   className='ticket-status-box'
+		       >
+			   <p>En Développement {tickets.dev.length}</p>
+			   <Divider />
+			   {tickets.dev.map((displayTicket))}
+		       </div>
 		   )}
 		   { visibility.toBeVerified && (
-		   <div
-		       className='ticket-status-box'
-		   >
-		       <p>A Vérifier {tickets.toBeVerified.length}</p>
-		       <Divider />
-		       {tickets.toBeVerified.map((displayTicket))}
-		   </div>
+		       <div
+			   className='ticket-status-box'
+		       >
+			   <p>A Vérifier {tickets.toBeVerified.length}</p>
+			   <Divider />
+			   {tickets.toBeVerified.map((displayTicket))}
+		       </div>
 		   )}
 		   { visibility.completed && (
-		   <div
-		       className='ticket-status-box'
-		   >
-		       <p>Terminé {tickets.completed.length}</p>
-		       <Divider />
-		       {tickets.completed.map((displayTicket))}
-		   </div>
+		       <div
+			   className='ticket-status-box'
+		       >
+			   <p>Terminé {tickets.completed.length}</p>
+			   <Divider />
+			   {tickets.completed.map((displayTicket))}
+		       </div>
 		   )}
 	       </div>
 	   </>)

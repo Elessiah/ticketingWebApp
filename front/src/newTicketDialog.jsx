@@ -19,12 +19,13 @@ function NewTicketDialog(props) {
     const username = localStorage.getItem('username');
     const token = localStorage.getItem('token');
     const {onClose, selectedValues, open, onInterrupt, title } = props;
-    const [values, setValues] = useState({ priority:selectedValues.priority,
-					   admin:selectedValues.admin,
-					   category:selectedValues.category,
-					   assignedList:selectedValues.assignedList,
-					   title:selectedValues.title,
-					   description:selectedValues.description });
+    const [values, setValues] = useState({ priority:'',
+					   admin:'',
+					   category:'',
+					   assignedList:[],
+					   title:'',
+					   description:'',
+					   id:0});
     const [users, setUsers] = useState([]);
 
     async function getUsers() {
@@ -41,7 +42,15 @@ function NewTicketDialog(props) {
     
     useEffect(() => {
 	getUsers();
-    }, []);
+	setValues({priority:selectedValues.priority,
+		   admin:selectedValues.admin,
+		   category:selectedValues.category,
+		   assignedList:selectedValues.assignedList,
+		   title:selectedValues.title,
+		   description:selectedValues.description,
+		   id:selectedValues.id,
+		  });
+    }, [selectedValues]);
 
     
     if (!Array.isArray(users))
@@ -176,13 +185,14 @@ function NewTicketDialog(props) {
 		className='formNewComponent'
 		id="outlined-multiline-static"
 		label="Description"
+		value={values.description}
 		multiline
 		rows={4}
 		onChange={evt => updateDescription(evt.target.value)}
 	    />
 	    </div>
 	    <div className='formNewComponent'>
-		<Button variant="contained" className='formNewComponent' onClick={handleSubmit}>Créer</Button>
+		<Button variant="contained" className='formNewComponent' onClick={handleSubmit}>Confirmer</Button>
 	    </div>
 	</Dialog>
     )

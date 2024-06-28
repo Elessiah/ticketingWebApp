@@ -1,7 +1,8 @@
 class Ticket
 {
-    constructor(priority, admin, category, assignedList, title, description)
+    constructor(id, priority, admin, category, assignedList, title, description)
     {
+	this.id = id;
 	this.priority = priority;
 	this.admin = admin;
 	this.category = category;
