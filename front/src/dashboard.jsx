@@ -171,9 +171,10 @@ function Dashboard() {
 	    colorStyle = 'orange';
 	else if (ticket.priority === 'Très Haute')
 	    colorStyle = 'red';
+	console.log(ticket.id);
 	return(
 	    <Draggable
-		draggableId={ticket.id}
+		draggableId={ticket.id+''}
 		index={index}
 		key={ticket.id}
 	    >
@@ -245,7 +246,7 @@ function Dashboard() {
 			       <Divider />
 			       <Droppable droppableId="DropPending">
 				   {(provided) => (
-				       <div {...provided.droppableProps} ref={provided.inneRef}>
+				       <div {...provided.droppableProps} ref={provided.innerRef}>
 					   {tickets.pending.map((displayTicket))}
 					   {provided.placeholder}
 				       </div>
